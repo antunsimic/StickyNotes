@@ -1,0 +1,44 @@
+textarea {
+    height: 50vh; 
+}
+
+#eye {
+  display: none;
+}
+
+.dashboard a, .dashboard button, .dashboard select {
+  height: 3.5rem;
+  width: 3.5rem;
+}
+
+.dashboard svg {
+  height: 25px;
+  width: 25px;
+}
+
+#checkmark {
+  height: 30px;
+  width: 30px;
+}
+
+.dashboard a svg {
+  position: relative;
+  top: 8px;
+}
+
+.dashboard select {
+  width: 7rem;
+  background-color: #212529;
+  color: white;
+  border-color: #212529;
+}
+
+.select-button .left {
+  width: 2.5rem;
+  background-color: #212529;
+  border-radius: 5px 0px 0px 5px;
+}
+
+.select-button .right {
+  border-radius: 0px 5px 5px 0px;
+}

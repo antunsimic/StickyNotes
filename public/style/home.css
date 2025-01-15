@@ -1,0 +1,24 @@
+.card {
+    cursor: pointer; /* Changes the pointer to a hand icon */
+}
+
+header > div {
+    width: 100%;
+    max-width: none;
+}
+
+
+.btn-dark {
+    height: 5rem;
+    width: 5rem;
+}
+
+svg {
+    position: relative;
+    top: 12px;
+}
+
+#empty {
+    color: white;
+    font-weight: 600;
+}

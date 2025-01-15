@@ -1,0 +1,25 @@
+
+.registration, .hide {
+  display: none;
+}
+
+
+.btn-light {
+  border: 1px solid black; /* Black outline */
+}
+
+.signin svg {
+  width: 24px;
+  height: 24px;
+  position: relative;
+  top: 4px;
+}
+
+svg.show, svg.hide {  /*  eyes */
+  width: 20px;
+  height: 20px;
+}
+
+.invalid-feedback {
+  display: none;
+}

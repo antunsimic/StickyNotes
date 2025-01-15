@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= note.title %> - Online Notepad</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+      <link href="https://fonts.googleapis.com/css2?family=Knewave&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="style/common.css">
+    <link rel="stylesheet" href="style/note.css">
+</head>
+<body>
+
+  
+  <script>
+    const noteCreationTime = "<%= note.creation_time %>";
+    const noteUpdateTime = "<%= note.update_time %>"
+
+    </script>
+
+<header class="p-3 text-bg-dark">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-0 col-lg"></div>
+      <div class="col text-center knewave-regular">Sticky Notes</div>
+
+
+      <div class="col text-end">
+        <a href="/logout" type="button" class="btn btn-outline-light me-2">Log out</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+     <form action="/update" method="post" class="container">
+
+
+        <div class="row py-3">
+          <div class="col d-flex justify-content-between dashboard">
+            <a title="Home" href="/" type="button" class="btn btn-dark">
+              <svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor" class="bi bi-house" viewBox="0 0 16 16">
+                <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/>
+              </svg>
+            </a>
+            <button title="Delete" type="button" id="delete" class="btn btn-danger">
+              <svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
+                <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
+              </svg>
+            </button>
+            <div class="d-flex select-button">
+              <div class="d-flex flex-column justify-content-center align-items-center left">
+              <svg xmlns="http://www.w3.org/2000/svg"  fill="white" class="bi bi-person-lock" viewBox="0 0 16 16">
+                <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0M8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m0 5.996V14H3s-1 0-1-1 1-4 6-4q.845.002 1.544.107a4.5 4.5 0 0 0-.803.918A11 11 0 0 0 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664zM9 13a1 1 0 0 1 1-1v-1a2 2 0 1 1 4 0v1a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1zm3-3a1 1 0 0 0-1 1v1h2v-1a1 1 0 0 0-1-1"/>
+              </svg>
+            </div>
+            <select class="form-select form-select-lg right">
+              <option selected>Private</option>
+              <option value="1">Public</option>
+
+            </select>
+          </div>
+            <button title="Edit" type="button" id="edit" class="btn btn-dark">
+              <svg id="pen" xmlns="http://www.w3.org/2000/svg"  fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+              </svg>
+              <svg id="eye" xmlns="http://www.w3.org/2000/svg"  fill="currentColor" class="bi bi-eye" viewBox="0 0 16 16">
+                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+              </svg>
+            </button>
+  
+         
+            <button title="Update" type="submit" class="btn btn-dark">
+              <svg id="checkmark" xmlns="http://www.w3.org/2000/svg"  fill="currentColor" class="bi bi-check2" viewBox="0 0 16 16">
+                <path d="M13.854 3.646a.5.5 0 0 1 0 .708l-7 7a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0"/>
+              </svg>
+            </button>
+
+        </div>
+        
+          </div>
+          <div class="row py-2">
+            <input type="text" name="title" placeholder="Title" value="<%= note.title %>" readonly>
+          </div>
+       
+             <div class="row">
+                <textarea name="content" placeholder="Write note here..." readonly><%= note.content %></textarea>
+          
+             </div> 
+             <div class="row info white">
+              <div class="col-12 col-sm text-start" id="updated">
+              Updated: <%= new Date(note.update_time).toLocaleString() %>  </div>
+
+              <div class="col-12 col-sm text-end" id="created" >Created: <%= new Date(note.creation_time).toLocaleString()  %> </div>
+            </div>
+             </div>
+       <input type="hidden" name="id" value="<%= note.id  %>">
+       <input type="hidden" name="_method">
+       <input type="hidden" name="toPatch">
+
+        
+      </form>
+
+<!--    <%-  include("./partials/footer.ejs")   %> -->  
+    
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script> 
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+      <script src="scripts/common.js"></script>
+      <script src="scripts/note.js"></script>
+   
+</body>
+</html>
