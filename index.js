@@ -1,11 +1,12 @@
-import express from "express";
+import express, { json } from "express";
 import methodOverride from "method-override";
 import pg from "pg";
 import session from "express-session";
 import passport from "passport";
 import env from "dotenv";
 import bcrypt from "bcrypt";
-
+import GoogleStrategy from "passport-google-oauth2";
+import GitHubStrategy from "passport-github2";
 
 env.config();
 const saltRounds = 10;
@@ -141,8 +142,13 @@ app.get("/login", async (req, res) => {
       res.status(500).send("Database error");
       }
 
+     let error = "No error"
+     if (req.query.error) {
+      error = "This account uses a different sign-in method"
+     } 
+
     res.render("login.ejs", {
-      error: "No error"
+      error: error
     });
   }
 
@@ -151,12 +157,13 @@ app.get("/login", async (req, res) => {
 
 
 
+
 app.post("/upload", async (req, res) => {
   if (req.isAuthenticated()) {
     const creationTime = new Date().toISOString(); 
     // notes.push(new Note(req.body.title, req.body.content));
     try {
-     await db.query("INSERT INTO notes (title, content, bg_color, creation_time, update_time, user_id) VALUES ($1, $2, $3, $4, $4, $5)", [req.body.title, req.body.content, getRandomLightColor(), creationTime, req.user.id]);
+     await db.query("INSERT INTO notes (title, content, bg_color, creation_time, update_time, user_id, visibility) VALUES ($1, $2, $3, $4, $4, $5, $6)", [req.body.title, req.body.content, getRandomLightColor(), creationTime, req.user.id, req.body.visibility]);
    
    
      res.redirect("/");
@@ -203,7 +210,7 @@ app.post("/register", async (req, res) => {
         if (err) {
           console.error("Error hashing password:", err);
         } else {
-          console.log("Hashed Password:", hash);
+        //  console.log("Hashed Password:", hash);
           const userJoinTime = new Date().toISOString(); 
           const result = await db.query(
             "INSERT INTO users (username, password, join_time) VALUES ($1, $2, $3) RETURNING *",
@@ -231,6 +238,7 @@ app.post("/register", async (req, res) => {
 
 
 app.post("/login", async (req, res) => {
+ // console.log("logging the user in!")
   const username = req.body.username;
   const password = req.body.password;
   try {
@@ -256,6 +264,7 @@ app.post("/login", async (req, res) => {
         } else {
          // console.log(result);
           if (result) {
+         //   console.log("regular logged in successfully!")
             try  {
               await db.query("UPDATE users SET login_attempts = 0 WHERE id = $1", [user.id ]);
 
@@ -334,30 +343,43 @@ app.get("/new", (req, res) => {
 app.get("/note", async (req, res) => {
   // req.query.id
 
-  if (req.isAuthenticated()) {
-    if (typeof req.query.id === "undefined") {
+  if (typeof req.query.id === "undefined") {
+    res.redirect("/")
+  } else {
+  try {
+    const dbRes = await db.query("SELECT * FROM notes WHERE id = $1", [req.query.id]);
+    const note = dbRes.rows[0];
+    if (typeof note === "undefined") {
       res.redirect("/")
-    } else {
-    try {
-      const dbRes = await db.query("SELECT * FROM notes WHERE id = $1", [req.query.id]);
-      const note = dbRes.rows[0];
-      if (typeof note === "undefined" || note.user_id !== req.user.id) {
+      return;
+    }
+    const logged_in = req.isAuthenticated()
+    if (note.visibility === "Private") {
+      if (!logged_in) {
+        res.redirect("/login")
+        return;
+      }
+      if (req.user.id !== note.user_id) {
         res.redirect("/")
         return;
       }
-      const data = {
-        note: note,
-        };
-        res.render("note.ejs", data);
-      } catch (err) {
-      console.error("Error executing query", err.stack);
-      res.status(500).send("Database error");
-      }
-  
-  } }
-  else {
-    res.redirect("/login");
-  }
+    }
+    let owns = false
+    if (logged_in && req.user.id === note.user_id ) {
+      owns = true
+    }
+    const data = {
+      note: note,
+      owns: owns,
+      logged_in: logged_in
+      };
+      res.render("note.ejs", data);
+    } catch (err) {
+    console.error("Error executing query", err.stack);
+    res.status(500).send("Database error");
+    }
+
+} 
 
 });
 
@@ -365,7 +387,7 @@ app.put("/update", async (req, res) => {
   // req.body.id
   const updateTime = new Date().toISOString(); 
   try {
-    await db.query("UPDATE notes SET title = $1, content = $2, update_time = $3 WHERE id = $4", [req.body.title, req.body.content, updateTime, req.body.id]);
+    await db.query("UPDATE notes SET title = $1, content = $2, update_time = $3, visibility = $4 WHERE id = $5", [req.body.title, req.body.content, updateTime, req.body.visibility, req.body.id]);
  
     res.redirect("/");
     } catch (err) {
@@ -376,19 +398,7 @@ app.put("/update", async (req, res) => {
 });
 
 
-app.patch("/update", async (req, res) => {
-  const toPatch = req.body.toPatch;
-  const updateTime = new Date().toISOString(); 
-  try {
-    await db.query(`UPDATE notes SET ${toPatch} = $1, update_time = $2 WHERE id = $3`, [req.body[toPatch], updateTime, req.body.id]);
- 
-    res.redirect("/");
-    } catch (err) {
-    console.error("Error executing query", err.stack);
-    res.status(500).send("Database error");
-    }  
 
-});
 
 app.delete("/update", async (req, res) => {
 
@@ -403,6 +413,102 @@ app.delete("/update", async (req, res) => {
  
   
 });
+
+app.post(
+  "/googleAuth/start",
+  passport.authenticate("google", {
+    scope: ["email"],
+  })
+);
+
+
+app.get("/googleAuth/end", passport.authenticate("google", {
+  successRedirect: "/",
+  failureRedirect: "/login?error=oauth",
+}))
+
+app.post(
+  "/githubAuth/start",
+  passport.authenticate("github", {
+    scope: ["user:email"],
+  })
+);
+
+
+app.get("/githubAuth/end", passport.authenticate("github", {
+  successRedirect: "/",
+  failureRedirect: "/login?error=oauth",
+}))
+
+
+
+
+
+passport.use("google", new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: "http://localhost:3000/googleAuth/end",
+  userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
+}, async (accessToken, refreshToken, profile, cb) => {
+    //  console.log(profile);
+      try {
+       const result = await db.query("SELECT * FROM users WHERE username = $1", [profile.email])
+       if (result.rows.length === 0) {
+      //  console.log("Google registered successfully!")
+        const userJoinTime = new Date().toISOString(); 
+        const newUser = await db.query("INSERT INTO users (username, password, join_time) VALUES ($1, $2, $3) RETURNING *", [profile.email, "google", userJoinTime])
+        cb(null, newUser.rows[0])
+       } else {
+        // Already existing user
+    //    console.log("Google logged in successfully!")
+        const user = result.rows[0]
+        if (user.password === "google") {
+          cb(null, user);
+        }
+        else {
+
+          cb(null, false)
+        }
+        
+       }
+      } catch (err) {
+        cb(err);
+      }
+  })
+);
+
+passport.use("github", new GitHubStrategy({
+  clientID: process.env.GITHUB_CLIENT_ID,
+  clientSecret: process.env.GITHUB_CLIENT_SECRET,
+  callbackURL: "http://localhost:3000/githubAuth/end",
+}, async (accessToken, refreshToken, profile, cb) => {
+    //  console.log(profile);
+      const username = profile.emails[0]?.value ? profile.emails[0].value : profile.username
+      try {
+       const result = await db.query("SELECT * FROM users WHERE username = $1", [username])
+       if (result.rows.length === 0) {
+      //  console.log("Github registered successfully!")
+        const userJoinTime = new Date().toISOString(); 
+        const newUser = await db.query("INSERT INTO users (username, password, join_time) VALUES ($1, $2, $3) RETURNING *", [username, "github", userJoinTime])
+        cb(null, newUser.rows[0])
+       } else {
+        // Already existing user
+    //    console.log("Github logged in successfully!")
+    const user = result.rows[0]
+    if (user.password === "github") {
+      cb(null, user);
+    }
+    else {
+    //  console.log("password should've been github, but it's " + user.password)
+      cb(null, false)
+    }
+       }
+      } catch (err) {
+        cb(err);
+      }
+  })
+);
+
 
 
 

@@ -101,7 +101,7 @@ function checkPasswordValidity() {
 }
 
 $("#non-oauth").on('click', function(event) {  
-
+   // console.log("getting ready to log in!")
     event.preventDefault();
     
     checkUsernameValidity();
@@ -112,6 +112,7 @@ $("#non-oauth").on('click', function(event) {
     }  
       
 });
+
 
 $(".oauth").on('click', function(event) { 
     username[0].setCustomValidity("");

@@ -27,3 +27,19 @@ function checkContentValidity() {
     }
 }
 
+
+$('#brand').on('click', function(event) {
+        
+    window.location.href = "/";
+  
+});
+
+$(".select-button").on("change", function (event) {
+    const currentValue = $(this).find("select").val()
+    // display flex or none
+    $(this).find("svg").css("display", "none")
+    $(this).find("#" + currentValue).css("display", "flex")
+
+
+})
+

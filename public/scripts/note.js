@@ -1,7 +1,8 @@
 
-
+let visibility = $("#visibility")
 let originalTitle = title.val();
 let originalContent = content.val();
+let originalVisibility = visibility.val()
 
 function putOrPatch(newTitle, newContent) {
     if (newTitle !== originalTitle && newContent !== originalContent) {
@@ -12,17 +13,16 @@ function putOrPatch(newTitle, newContent) {
     }
 }
 
-if (noteCreationTime == noteUpdateTime) {
-    $("#updated").css("visibility", "hidden");
-}
+
 
 $("button[type='submit']").on('click', function(event) {
 
     event.preventDefault();
     let newTitle = title.val();
     let newContent = content.val();
+    let newVisibility = visibility.val()
 
-    if (newTitle === originalTitle && newContent === originalContent) {
+    if (newTitle === originalTitle && newContent === originalContent && newVisibility === originalVisibility) {
         window.location.href = "/";
         return;
     }
@@ -32,37 +32,13 @@ $("button[type='submit']").on('click', function(event) {
 
     if (title[0].reportValidity() && content[0].reportValidity()) {
 
-        if (newTitle !== originalTitle && newContent !== originalContent) {
-            $("input[name='_method']").val("PUT");
-        }
-        else {
-            $("input[name='_method']").val("PATCH");
-            if (newTitle !== originalTitle) {
-                $("input[name='toPatch']").val("title");
-            }
-            else {
-                $("input[name='toPatch']").val("content"); 
-            }
-        }
+    
       $('form').submit();
     }
 });
 
 
-$("button[id='edit']").on("click", function(event) {
 
-   title[0].toggleAttribute("readonly");
-    content[0].toggleAttribute("readonly");
-
-       $("#eye").toggle();
-       $("#pen").toggle();
-
-    if ($(this).attr("title")==="Edit") {
-        $(this).attr("title", "View-Only")
-    } else {
-        $(this).attr("title", "Edit")
-    }
-});
 
 $("button[id='delete']").on("click", function(event) {
     $("input[name='_method']").val("DELETE");
@@ -71,3 +47,10 @@ $("button[id='delete']").on("click", function(event) {
 
 });
 
+
+$("#EditView").on("change", function (event) {
+
+    content[0].toggleAttribute("readonly")
+    title[0].toggleAttribute("readonly")
+
+})
