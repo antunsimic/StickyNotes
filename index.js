@@ -521,7 +521,12 @@ passport.use("github", new GitHubStrategy({
   })
 );
 
-
+app.use((req, res) => {
+ 
+  res.redirect("/")
+   // res.status(404).render("404.ejs"); // Using EJS for templating
+ 
+});
 
 
 const array = ["SIGINT", "SIGTERM"];

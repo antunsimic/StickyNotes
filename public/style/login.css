@@ -23,3 +23,10 @@ svg.show, svg.hide {  /*  eyes */
 .invalid-feedback {
   display: none;
 }
+
+
+#bigSigninBox {
+  display: inline-block;
+  max-width: 400px;
+}
+  
