@@ -13,7 +13,7 @@ const saltRounds = 10;
 
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 app.use(session({
   secret: process.env.SESSION_KEY,
@@ -178,7 +178,7 @@ app.post("/upload", async (req, res) => {
      
   }
   else {
-    res.redirect("/login")
+    res.status(401).render("error.ejs", {errorMessage: "401 - Unauthorized"});
   }
 
     
@@ -357,17 +357,17 @@ app.get("/note", async (req, res) => {
     const dbRes = await db.query("SELECT * FROM notes WHERE id = $1", [req.query.id]);
     const note = dbRes.rows[0];
     if (typeof note === "undefined") {
-      res.redirect("/")
+      res.status(404).render("error.ejs", {errorMessage: "404 - Not Found"}); 
       return;
     }
     const logged_in = req.isAuthenticated()
     if (note.visibility === "Private") {
       if (!logged_in) {
-        res.redirect("/login")
+        res.status(401).render("error.ejs", {errorMessage: "401 - Unauthorized"}); 
         return;
       }
       if (req.user.id !== note.user_id) {
-        res.redirect("/")
+        res.status(403).render("error.ejs", {errorMessage: "403 - Forbidden"}); 
         return;
       }
     }
@@ -523,8 +523,8 @@ passport.use("github", new GitHubStrategy({
 
 app.use((req, res) => {
  
-  res.redirect("/")
-   // res.status(404).render("404.ejs"); // Using EJS for templating
+ // res.redirect("/")
+    res.status(404).render("error.ejs", {errorMessage: "404 - Not Found"}); // Using EJS for templating
  
 });
 
