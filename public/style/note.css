@@ -6,7 +6,7 @@ textarea {
   display: none;
 }
 
-#dashboard a, #dashboard button, #dashboard select {
+#dashboard a, #dashboard button {
   height: 3.5rem;
   width: 3.5rem;
 }

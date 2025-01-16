@@ -15,9 +15,9 @@ function putOrPatch(newTitle, newContent) {
 
 
 
-$("button[type='submit']").on('click', function(event) {
-
-    event.preventDefault();
+function update() {
+    
+   
     let newTitle = title.val();
     let newContent = content.val();
     let newVisibility = visibility.val()
@@ -35,7 +35,22 @@ $("button[type='submit']").on('click', function(event) {
     
       $('form').submit();
     }
-});
+    else {
+        console.log("I was called!")
+        let selectDone = $("#EditView")[0];
+        if (selectDone.value === "Done") {
+            console.log("the value is indeed done!")
+            selectDone.querySelector("#SelectDone").toggleAttribute("selected")
+            selectDone.querySelector("#SelectEditing").toggleAttribute("selected")
+            selectDone.value = "Editing"
+            $("#Editing").css("display", "flex")
+
+        }
+    }
+}
+
+
+  
 
 
 
@@ -49,8 +64,15 @@ $("button[id='delete']").on("click", function(event) {
 
 
 $("#EditView").on("change", function (event) {
+    if (this.value === "Done") {
+        update()
+    }
+    else {
+        content[0].toggleAttribute("readonly")
+        title[0].toggleAttribute("readonly")
+    }
 
-    content[0].toggleAttribute("readonly")
-    title[0].toggleAttribute("readonly")
 
 })
+
+$("button[type='submit']").on('click', update)

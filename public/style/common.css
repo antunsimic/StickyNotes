@@ -1,3 +1,5 @@
+
+
 .knewave-regular {
     font-family: "Knewave", serif;
     font-weight: 400;
@@ -45,3 +47,10 @@ body {
 main {
   flex: 1;
 }
+
+
+#brand, #about {
+  color: white;
+  text-decoration: none;
+}
+

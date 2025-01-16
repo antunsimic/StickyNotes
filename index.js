@@ -60,7 +60,7 @@ const interval = 24 * 60 * 60 * 1000
 let lastReset = "undefined"
 
 
-app.listen(port, () => {
+app.listen(port, '0.0.0.0', () => {
   console.log(`Server running on port ${port}`);
 });
 
@@ -128,6 +128,10 @@ else {
 }
   
 });
+
+app.get("/about", (req, res) => {
+  res.render("about.ejs")
+})
 
 app.get("/login", async (req, res) => {
   if (req.isAuthenticated()) {
@@ -321,12 +325,15 @@ app.get("/logout", (req, res) => {
     if (err) {
       console.error("Error logging out:", err);
       return res.status(500).send("Failed to log out");
-  } else { 
+  } else {
     res.redirect("/login");
   }
-    
+   
   });
 });
+
+
+
 
 
 app.get("/new", (req, res) => {
@@ -414,12 +421,16 @@ app.delete("/update", async (req, res) => {
   
 });
 
+
+
 app.post(
   "/googleAuth/start",
   passport.authenticate("google", {
     scope: ["email"],
+    prompt: "select_account", // Forces the account picker to appear
   })
 );
+
 
 
 app.get("/googleAuth/end", passport.authenticate("google", {
@@ -431,6 +442,7 @@ app.post(
   "/githubAuth/start",
   passport.authenticate("github", {
     scope: ["user:email"],
+    prompt: "select_account", 
   })
 );
 
@@ -483,7 +495,7 @@ passport.use("github", new GitHubStrategy({
   callbackURL: "http://localhost:3000/githubAuth/end",
 }, async (accessToken, refreshToken, profile, cb) => {
     //  console.log(profile);
-      const username = profile.emails[0]?.value ? profile.emails[0].value : profile.username
+      const username = profile.emails?.[0].value || profile.username
       try {
        const result = await db.query("SELECT * FROM users WHERE username = $1", [username])
        if (result.rows.length === 0) {
@@ -524,3 +536,6 @@ array.forEach((signal) => {
 	}
   });
 });
+
+
+
