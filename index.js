@@ -2,6 +2,7 @@ import express, { json } from "express";
 import methodOverride from "method-override";
 import pg from "pg";
 import session from "express-session";
+import PgSession from "connect-pg-simple";
 import passport from "passport";
 import env from "dotenv";
 import bcrypt from "bcrypt";
@@ -19,38 +20,6 @@ if (port == null || port == "") {
   port = 3000;
   address = "http://localhost:3000";
 }
-app.use(session({
-  secret: process.env.SESSION_KEY,
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    maxAge: 1000 * 60 * 60 * 24,
-  },
-  })
-);
-
-app.use(passport.initialize());
-app.use(passport.session());
-app.use(express.static("public"));
-app.use(express.urlencoded({extended: true}));
-app.use(methodOverride((req, res) => {
-  if ('_method' in req.body) {
-    return req.body._method;
-  }
-  else {
-  return "POST";
-}
-
-}));
-
-/*
-const db = new pg.Client({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
-  */
 
 const db = new pg.Client({
   host: "portfolio-projects-antun-fc29.b.aivencloud.com", 
@@ -70,6 +39,39 @@ db.connect((err) => {
 	console.error("Connection error", err.stack);
   } 
 });
+
+
+app.use(
+  session({
+    store: new (PgSession(session))({
+      pool: db, // Use your existing PostgreSQL client
+      tableName: "sn_session", // Name of the table to store sessions
+    }),
+    secret: process.env.SESSION_KEY,
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
+    },
+  })
+);
+
+
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(express.static("public"));
+app.use(express.urlencoded({extended: true}));
+app.use(methodOverride((req, res) => {
+  if ('_method' in req.body) {
+    return req.body._method;
+  }
+  else {
+  return "POST";
+}
+
+}));
+
+
 
 const interval = 24 * 60 * 60 * 1000
 let lastReset = "undefined"
