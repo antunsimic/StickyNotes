@@ -1,6 +1,6 @@
 import express, { json } from "express";
 import methodOverride from "method-override";
-import pg from "pg";
+import { Client } from "pg";
 import session from "express-session";
 import passport from "passport";
 import env from "dotenv";
@@ -13,8 +13,10 @@ const saltRounds = 10;
 
 
 const app = express();
-const port = process.env.PORT || 3000;
-
+let port = process.env.PORT;
+if (port == null || port == "") {
+  port = 3000;
+}
 app.use(session({
   secret: process.env.SESSION_KEY,
   resave: false,
@@ -39,14 +41,12 @@ app.use(methodOverride((req, res) => {
 
 }));
 
-const db = new pg.Client({
-  user: "postgres",
-  host: "localhost",
-  database: "notepad",
-  password: "NikoBelic",
-  port: 5432,
+const db = new Client({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
-
 
 
 // Connect once when the application starts
@@ -60,7 +60,7 @@ const interval = 24 * 60 * 60 * 1000
 let lastReset = "undefined"
 
 
-app.listen(port, '0.0.0.0', () => {
+app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
 
@@ -88,7 +88,7 @@ async function resetLoginAttempts() {
   const currentMoment = new Date();
  // console.log(currentMoment)
  if (lastReset === "undefined") {
-  const dbRes = await db.query("SELECT last_reset FROM timestamps WHERE id = 1");
+  const dbRes = await db.query("SELECT last_reset FROM sn_timestamps WHERE id = 1");
    lastReset = new Date(dbRes.rows[0].last_reset);
  }
 
@@ -96,8 +96,8 @@ async function resetLoginAttempts() {
 
   if (currentMoment - lastReset >= interval) {
     lastReset = currentMoment;
-      await db.query("UPDATE users SET login_attempts = 0");
-      await db.query("UPDATE timestamps SET last_reset = $1", [lastReset.toISOString()]);
+      await db.query("UPDATE sn_users SET login_attempts = 0");
+      await db.query("UPDATE sn_timestamps SET last_reset = $1", [lastReset.toISOString()]);
      
   }
 }
@@ -109,7 +109,7 @@ app.get("/", async (req, res) => {
 if (req.isAuthenticated()) {
  // console.log(req.user.username)
   try {
-    const dbRes = await db.query("SELECT * FROM notes WHERE user_id = $1 ORDER BY update_time DESC", [req.user.id]);
+    const dbRes = await db.query("SELECT * FROM sn_notes WHERE user_id = $1 ORDER BY update_time DESC", [req.user.id]);
     const notes = dbRes.rows;
    // console.log(notes);
   const data = {
@@ -167,7 +167,7 @@ app.post("/upload", async (req, res) => {
     const creationTime = new Date().toISOString(); 
     // notes.push(new Note(req.body.title, req.body.content));
     try {
-     await db.query("INSERT INTO notes (title, content, bg_color, creation_time, update_time, user_id, visibility) VALUES ($1, $2, $3, $4, $4, $5, $6)", [req.body.title, req.body.content, getRandomLightColor(), creationTime, req.user.id, req.body.visibility]);
+     await db.query("INSERT INTO sn_notes (title, content, bg_color, creation_time, update_time, user_id, visibility) VALUES ($1, $2, $3, $4, $4, $5, $6)", [req.body.title, req.body.content, getRandomLightColor(), creationTime, req.user.id, req.body.visibility]);
    
    
      res.redirect("/");
@@ -198,7 +198,7 @@ app.post("/register", async (req, res) => {
   const password = req.body.password;
 
   try {
-    const checkResult = await db.query("SELECT * FROM users WHERE username = $1", [
+    const checkResult = await db.query("SELECT * FROM sn_users WHERE username = $1", [
       username,
     ]);
 
@@ -217,7 +217,7 @@ app.post("/register", async (req, res) => {
         //  console.log("Hashed Password:", hash);
           const userJoinTime = new Date().toISOString(); 
           const result = await db.query(
-            "INSERT INTO users (username, password, join_time) VALUES ($1, $2, $3) RETURNING *",
+            "INSERT INTO sn_users (username, password, join_time) VALUES ($1, $2, $3) RETURNING *",
             [username, hash, userJoinTime]
           );
           const user = result.rows[0];
@@ -246,7 +246,7 @@ app.post("/login", async (req, res) => {
   const username = req.body.username;
   const password = req.body.password;
   try {
-    const result = await db.query("SELECT * FROM users WHERE username = $1", [
+    const result = await db.query("SELECT * FROM sn_users WHERE username = $1", [
       username,
     ]);
     if (result.rows.length > 0) {
@@ -270,7 +270,7 @@ app.post("/login", async (req, res) => {
           if (result) {
          //   console.log("regular logged in successfully!")
             try  {
-              await db.query("UPDATE users SET login_attempts = 0 WHERE id = $1", [user.id ]);
+              await db.query("UPDATE sn_users SET login_attempts = 0 WHERE id = $1", [user.id ]);
 
             } catch (err) {
               console.error("Error executing query", err.stack);
@@ -291,7 +291,7 @@ app.post("/login", async (req, res) => {
             
               numberOfAttempts++;
               try {
-                await db.query("UPDATE users SET login_attempts = $1 WHERE id = $2", [numberOfAttempts, user.id ]);
+                await db.query("UPDATE sn_users SET login_attempts = $1 WHERE id = $2", [numberOfAttempts, user.id ]);
   
               } catch (err) {
                 console.error("Error executing query", err.stack);
@@ -354,7 +354,7 @@ app.get("/note", async (req, res) => {
     res.redirect("/")
   } else {
   try {
-    const dbRes = await db.query("SELECT * FROM notes WHERE id = $1", [req.query.id]);
+    const dbRes = await db.query("SELECT * FROM sn_notes WHERE id = $1", [req.query.id]);
     const note = dbRes.rows[0];
     if (typeof note === "undefined") {
       res.status(404).render("error.ejs", {errorMessage: "404 - Not Found"}); 
@@ -394,7 +394,7 @@ app.put("/update", async (req, res) => {
   // req.body.id
   const updateTime = new Date().toISOString(); 
   try {
-    await db.query("UPDATE notes SET title = $1, content = $2, update_time = $3, visibility = $4 WHERE id = $5", [req.body.title, req.body.content, updateTime, req.body.visibility, req.body.id]);
+    await db.query("UPDATE sn_notes SET title = $1, content = $2, update_time = $3, visibility = $4 WHERE id = $5", [req.body.title, req.body.content, updateTime, req.body.visibility, req.body.id]);
  
     res.redirect("/");
     } catch (err) {
@@ -410,7 +410,7 @@ app.put("/update", async (req, res) => {
 app.delete("/update", async (req, res) => {
 
   try {
-    await db.query("DELETE FROM notes WHERE id = $1", [req.body.id]);
+    await db.query("DELETE FROM sn_notes WHERE id = $1", [req.body.id]);
  
     res.redirect("/");
     } catch (err) {
@@ -464,11 +464,11 @@ passport.use("google", new GoogleStrategy({
 }, async (accessToken, refreshToken, profile, cb) => {
     //  console.log(profile);
       try {
-       const result = await db.query("SELECT * FROM users WHERE username = $1", [profile.email])
+       const result = await db.query("SELECT * FROM sn_users WHERE username = $1", [profile.email])
        if (result.rows.length === 0) {
       //  console.log("Google registered successfully!")
         const userJoinTime = new Date().toISOString(); 
-        const newUser = await db.query("INSERT INTO users (username, password, join_time) VALUES ($1, $2, $3) RETURNING *", [profile.email, "google", userJoinTime])
+        const newUser = await db.query("INSERT INTO sn_users (username, password, join_time) VALUES ($1, $2, $3) RETURNING *", [profile.email, "google", userJoinTime])
         cb(null, newUser.rows[0])
        } else {
         // Already existing user
@@ -497,11 +497,11 @@ passport.use("github", new GitHubStrategy({
     //  console.log(profile);
       const username = profile.emails?.[0].value || profile.username
       try {
-       const result = await db.query("SELECT * FROM users WHERE username = $1", [username])
+       const result = await db.query("SELECT * FROM sn_users WHERE username = $1", [username])
        if (result.rows.length === 0) {
       //  console.log("Github registered successfully!")
         const userJoinTime = new Date().toISOString(); 
-        const newUser = await db.query("INSERT INTO users (username, password, join_time) VALUES ($1, $2, $3) RETURNING *", [username, "github", userJoinTime])
+        const newUser = await db.query("INSERT INTO sn_users (username, password, join_time) VALUES ($1, $2, $3) RETURNING *", [username, "github", userJoinTime])
         cb(null, newUser.rows[0])
        } else {
         // Already existing user
