@@ -1,6 +1,6 @@
 import express, { json } from "express";
 import methodOverride from "method-override";
-import { Client } from "pg";
+import pg from "pg";
 import session from "express-session";
 import passport from "passport";
 import env from "dotenv";
@@ -14,8 +14,10 @@ const saltRounds = 10;
 
 const app = express();
 let port = process.env.PORT;
+let address = "https://sticky-notes-moxw.onrender.com";
 if (port == null || port == "") {
   port = 3000;
+  address = "http://localhost:3000";
 }
 app.use(session({
   secret: process.env.SESSION_KEY,
@@ -41,11 +43,24 @@ app.use(methodOverride((req, res) => {
 
 }));
 
-const db = new Client({
+/*
+const db = new pg.Client({
   connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false
   }
+});
+  */
+
+const db = new pg.Client({
+  host: "portfolio-projects-antun-fc29.b.aivencloud.com", 
+  port: 18541, 
+  database: "defaultdb", 
+  user: process.env.DATABASE_USER, 
+  password: process.env.DATABASE_PASSWORD, 
+  ssl: {
+    rejectUnauthorized: false, 
+  },
 });
 
 
@@ -459,7 +474,7 @@ app.get("/githubAuth/end", passport.authenticate("github", {
 passport.use("google", new GoogleStrategy({
   clientID: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "http://localhost:3000/googleAuth/end",
+  callbackURL: address + "/googleAuth/end",
   userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo",
 }, async (accessToken, refreshToken, profile, cb) => {
     //  console.log(profile);
@@ -492,7 +507,7 @@ passport.use("google", new GoogleStrategy({
 passport.use("github", new GitHubStrategy({
   clientID: process.env.GITHUB_CLIENT_ID,
   clientSecret: process.env.GITHUB_CLIENT_SECRET,
-  callbackURL: "http://localhost:3000/githubAuth/end",
+  callbackURL: address + "/githubAuth/end",
 }, async (accessToken, refreshToken, profile, cb) => {
     //  console.log(profile);
       const username = profile.emails?.[0].value || profile.username
