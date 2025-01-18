@@ -34,11 +34,7 @@ Sticky Notes is an online notepad application that allows users to create, edit,
     ```
 
 3. **Set up environment variables**:
-    Create a 
-
-.env
-
- file in the root directory and add the following variables:
+    Create a .env file in the root directory and add the following variables:
     ```env
     DATABASE_USER=your_database_user
     DATABASE_PASSWORD=your_database_password
@@ -68,11 +64,7 @@ Sticky Notes is an online notepad application that allows users to create, edit,
 
 ## License
 
-This project is licensed under the terms specified in the 
-
-LICENSE.md
-
- file.
+This project is licensed under the terms specified in the LICENSE.md file.
 
 ## Acknowledgements
 
