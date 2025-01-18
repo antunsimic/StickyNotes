@@ -145,6 +145,8 @@ Copyright (c) 2011-2014 Jared Hanson
 ## Knewave
 Copyright (c) 2010, Tyler Finck , with Reserved Font Name: "Knewave". 
 
+This Font Software is licensed under the SIL Open Font License, Version 1.1.
+
 PREAMBLE
 
 The goals of the Open Font License (OFL) are to stimulate worldwide development of collaborative font projects, to support the font creation efforts of academic and linguistic communities, and to provide a free and open framework in which fonts may be shared and improved in partnership with others.
